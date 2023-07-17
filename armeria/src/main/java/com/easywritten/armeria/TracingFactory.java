@@ -16,19 +16,27 @@ import zipkin2.reporter.urlconnection.URLConnectionSender;
 
 final class TracingFactory {
 
+    private static final String serviceName = "hi-armeria";
+    private static Tracing tracing;
+
     /**
      * Controls aspects of tracing such as the name that shows up in the UI
      */
-    static Tracing create(String serviceName) {
+    static Tracing create() {
+        if (tracing != null) {
+            return tracing;
+        }
+
         CurrentTraceContext currentTraceContext =
                 RequestContextCurrentTraceContext.builder()
                                                  .addScopeDecorator(MDCScopeDecorator.get())
                                                  .build();
-        return Tracing.newBuilder()
-                      .localServiceName(serviceName)
-                      .currentTraceContext(currentTraceContext)
-                      .addSpanHandler(ZipkinSpanHandler.create(spanReporter(sender())))
-                      .build();
+        tracing = Tracing.newBuilder()
+                         .localServiceName(serviceName)
+                         .currentTraceContext(currentTraceContext)
+                         .addSpanHandler(ZipkinSpanHandler.create(spanReporter(sender())))
+                         .build();
+        return tracing;
     }
 
     /**
